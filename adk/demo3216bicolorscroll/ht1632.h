@@ -3,6 +3,22 @@
  * defintions for Holtek ht1632 LED driver.
  */
 
+#define Number_of_Displays 1
+#define CHIP_MAX 4*Number_of_Displays //Four HT1632Cs on one board
+#define X_MAX 32*Number_of_Displays - 1
+#define Y_MAX 15
+
+#define CLK_DELAY
+
+
+// possible values for a pixel;
+#define BLACK  0
+#define GREEN  1
+#define RED    2
+#define ORANGE 3
+
+#define LONGDELAY 1000  // This delay BETWEEN demos
+
 
 #if !defined(DEBUGPRINT)
 #define DEBUGPRINT(fmt, args...)
@@ -33,3 +49,7 @@
 #define HT1632_CMD_COMS11 0x2C	/* CMD= 0010-ABxx-x commons options */
 #define HT1632_CMD_PWM    0xA0	/* CMD= 101x-PPPP-x PWM duty cycle */
 #define HT1632_CMD_BITS (1<<7)
+
+extern void ht1632_setup();
+extern void ht1632_clear();
+extern void ht1632_plot (int, int, int);
