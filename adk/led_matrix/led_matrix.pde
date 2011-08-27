@@ -1,11 +1,6 @@
-#include <HT1632.h>
+#include "ht1632.h"
 #include <Usb.h>
 #include <AndroidAccessory.h>
-
-#define CS1_PIN		12
-#define CS2_PIN		13
-#define WR_PIN		10
-#define DATA_PIN	9
 
 AndroidAccessory acc("Google, Inc.",
 		     "DemoKit",
@@ -15,9 +10,12 @@ AndroidAccessory acc("Google, Inc.",
 		     "0000000012345678");
 
 void setup () {
-	Serial.begin(9600);
-
-	acc.powerOn();
+  
+  ht1632_setup();
+  
+  Serial.begin(9600);
+  
+  acc.powerOn();
 }
 
 void loop () {

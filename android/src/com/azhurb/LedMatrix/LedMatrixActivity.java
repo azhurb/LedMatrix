@@ -16,10 +16,17 @@
 
 package com.azhurb.LedMatrix;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+
 import com.azhurb.LedMatrix.R;
 import android.media.audiofx.Visualizer;
 import android.media.MediaPlayer;
@@ -32,13 +39,30 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.View;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.util.Log;
 import android.view.ViewGroup;
 
-public class LedMatrixActivity extends Activity {
+import com.android.future.usb.UsbAccessory;
+import com.android.future.usb.UsbManager;
+
+public class LedMatrixActivity extends Activity implements Runnable {
     private static final String TAG = "LedMatrix";
+    
+    private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
+
+	private UsbManager mUsbManager;
+	private PendingIntent mPermissionIntent;
+	private boolean mPermissionRequestPending;
+
+	UsbAccessory mAccessory;
+	ParcelFileDescriptor mFileDescriptor;
+	FileInputStream mInputStream;
+	FileOutputStream mOutputStream;
 
     private MediaPlayer mMediaPlayer;
     private Visualizer mVisualizer;
@@ -47,6 +71,61 @@ public class LedMatrixActivity extends Activity {
     private VisualizerView mVisualizerView;
     private TextView mStatusTextView;
     private Button mButtonPlay;
+    
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (ACTION_USB_PERMISSION.equals(action)) {
+				synchronized (this) {
+					UsbAccessory accessory = UsbManager.getAccessory(intent);
+					if (intent.getBooleanExtra(
+							UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+						openAccessory(accessory);
+					} else {
+						Log.d(TAG, "permission denied for accessory "
+								+ accessory);
+					}
+					mPermissionRequestPending = false;
+				}
+			} else if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) {
+				UsbAccessory accessory = UsbManager.getAccessory(intent);
+				if (accessory != null && accessory.equals(mAccessory)) {
+					closeAccessory();
+				}
+			}
+		}
+	};
+	
+	private void openAccessory(UsbAccessory accessory) {
+		mFileDescriptor = mUsbManager.openAccessory(accessory);
+		if (mFileDescriptor != null) {
+			mAccessory = accessory;
+			FileDescriptor fd = mFileDescriptor.getFileDescriptor();
+			mInputStream = new FileInputStream(fd);
+			mOutputStream = new FileOutputStream(fd);
+			Thread thread = new Thread(null, this, "DemoKit");
+			thread.start();
+			Log.d(TAG, "accessory opened");
+			//enableControls(true);
+		} else {
+			Log.d(TAG, "accessory open fail");
+		}
+	}
+	
+	private void closeAccessory() {
+		//enableControls(false);
+
+		try {
+			if (mFileDescriptor != null) {
+				mFileDescriptor.close();
+			}
+		} catch (IOException e) {
+		} finally {
+			mFileDescriptor = null;
+			mAccessory = null;
+		}
+	}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -116,6 +195,18 @@ public class LedMatrixActivity extends Activity {
                 // getResources().getDisplayMetrics().density)));
                 128));
         mLinearLayout.addView(mVisualizerView);
+        
+        mUsbManager = UsbManager.getInstance(this);
+		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
+				ACTION_USB_PERMISSION), 0);
+		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
+		registerReceiver(mUsbReceiver, filter);
+
+		if (getLastNonConfigurationInstance() != null) {
+			mAccessory = (UsbAccessory) getLastNonConfigurationInstance();
+			openAccessory(mAccessory);
+		}
     }
 
     private void setupVisualizerFxAndUI(boolean captureAudioOut) {
@@ -145,11 +236,7 @@ public class LedMatrixActivity extends Activity {
 
         }, Visualizer.getMaxCaptureRate(), false, true);
     }
-
-    /*
-     * public void run() { }
-     */
-
+    
     static final String HEXES = "0123456789ABCDEF";
 
     public static String getHex(byte[] raw) {
@@ -163,10 +250,49 @@ public class LedMatrixActivity extends Activity {
         }
         return hex.toString();
     }
+    
+    @Override
+	public Object onRetainNonConfigurationInstance() {
+		if (mAccessory != null) {
+			return mAccessory;
+		} else {
+			return super.onRetainNonConfigurationInstance();
+		}
+	}
+    
+    @Override
+	public void onResume() {
+		super.onResume();
+
+		Intent intent = getIntent();
+		if (mInputStream != null && mOutputStream != null) {
+			return;
+		}
+
+		UsbAccessory[] accessories = mUsbManager.getAccessoryList();
+		UsbAccessory accessory = (accessories == null ? null : accessories[0]);
+		if (accessory != null) {
+			if (mUsbManager.hasPermission(accessory)) {
+				openAccessory(accessory);
+			} else {
+				synchronized (mUsbReceiver) {
+					if (!mPermissionRequestPending) {
+						mUsbManager.requestPermission(accessory,
+								mPermissionIntent);
+						mPermissionRequestPending = true;
+					}
+				}
+			}
+		} else {
+			Log.d(TAG, "mAccessory is null");
+		}
+	}
 
     @Override
     protected void onPause() {
         super.onPause();
+        
+        closeAccessory();
 
         if (isFinishing() && mMediaPlayer != null) {
             mVisualizer.release();
@@ -174,12 +300,41 @@ public class LedMatrixActivity extends Activity {
             mMediaPlayer = null;
         }
     }
+    
+    public void run() {
+    	
+    }
+    
+    public void sendCommand(byte command, byte target, int value) {
+		byte[] buffer = new byte[3];
+		if (value > 255)
+			value = 255;
+
+		buffer[0] = command;
+		buffer[1] = target;
+		buffer[2] = (byte) value;
+		if (mOutputStream != null && buffer[1] != -1) {
+			try {
+				mOutputStream.write(buffer);
+			} catch (IOException e) {
+				Log.e(TAG, "write failed", e);
+			}
+		}
+	}
+    
+    @Override
+	public void onDestroy() {
+		unregisterReceiver(mUsbReceiver);
+		super.onDestroy();
+	}
 }
 
 class VisualizerView extends View {
     private byte[] mBytes;
     // private float[] mPoints;
     private Rect mRect = new Rect();
+    
+    private LedMatrixActivity mActivity;
 
     private Paint mForePaint = new Paint();
 
@@ -261,6 +416,8 @@ class VisualizerView extends View {
                         mForePaint);
 
             }
+            
+            mActivity.sendCommand((byte) 1, (byte) 1, (int) 1);
         }
     }
 }
