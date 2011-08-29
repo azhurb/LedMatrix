@@ -48,13 +48,14 @@ import android.content.pm.ActivityInfo;
 import android.util.Log;
 import android.view.ViewGroup;
 
-import com.android.future.usb.UsbAccessory;
-import com.android.future.usb.UsbManager;
+import com.android.future.usb.*;
+//import com.android.future.usb.UsbAccessory;
+//import com.android.future.usb.UsbManager;
 
 public class LedMatrixActivity extends Activity implements Runnable {
     private static final String TAG = "LedMatrix";
     
-    private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
+    private static final String ACTION_USB_PERMISSION = "com.azhurb.LedMatrix.action.USB_PERMISSION";
 
 	private UsbManager mUsbManager;
 	private PendingIntent mPermissionIntent;
@@ -72,6 +73,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
     private VisualizerView mVisualizerView;
     private TextView mStatusTextView;
     private Button mButtonPlay;
+    
     
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
 		@Override
@@ -105,7 +107,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
 			FileDescriptor fd = mFileDescriptor.getFileDescriptor();
 			mInputStream = new FileInputStream(fd);
 			mOutputStream = new FileOutputStream(fd);
-			Thread thread = new Thread(null, this, "DemoKit");
+			Thread thread = new Thread(null, this, "LedMatrix");
 			thread.start();
 			Log.d(TAG, "accessory opened");
 			//enableControls(true);
@@ -265,7 +267,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
 	public void onResume() {
 		super.onResume();
 
-		Intent intent = getIntent();
+		//Intent intent = getIntent();
 		if (mInputStream != null && mOutputStream != null) {
 			return;
 		}
@@ -337,12 +339,13 @@ class VisualizerView extends View {
     // private float[] mPoints;
     private Rect mRect = new Rect();
     
-    private LedMatrixActivity mActivity;
+    protected LedMatrixActivity mActivity;
 
     private Paint mForePaint = new Paint();
 
-    public VisualizerView(Context context) {
-        super(context);
+    public VisualizerView(LedMatrixActivity activity) {
+        super(activity);
+        mActivity = activity;
         init();
     }
 
@@ -434,10 +437,15 @@ class VisualizerView extends View {
                 int z = 16 - j;
                 
                 //todo: filling the frame
-                frame[i + (int) z/4] = (byte) (frame[i + (int) z/4] | (color << (z % 4) * 2));
+                frame[i * 4 + (int) z/4] = (byte) (frame[i * 4 + (int) z/4] | (color << (z % 4) * 2));
             }
         }
         
-        mActivity.sendCommand(frame);
+        Log.d("frame", "frame: " + LedMatrixActivity.getHex(frame));
+        
+        //if (mActivity != null) {
+        	mActivity.sendCommand(frame);
+        //}
     }
 }
+

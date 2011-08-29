@@ -3,10 +3,10 @@
 #include <AndroidAccessory.h>
 
 AndroidAccessory acc("Google, Inc.",
-		     "DemoKit",
-		     "DemoKit Arduino Board",
+		     "LedMatrix",
+		     "LedMatrix Arduino Board",
 		     "1.0",
-		     "http://www.android.com",
+		     "http://adk-open-call-2011.blogspot.com/",
 		     "0000000012345678");
 
 void setup () {
@@ -14,6 +14,7 @@ void setup () {
   ht1632_setup();
   
   Serial.begin(9600);
+  Serial.print("\r\nStart");
   
   acc.powerOn();
 }
@@ -24,7 +25,10 @@ void loop () {
 
 	if (acc.isConnected()) {
 		int len = acc.read(msg, sizeof(msg), 1);
-
+                
+                Serial.print("\r\nMsg length: ");
+                Serial.print(len, DEC);
+                
 		if (len > 0) {
 
 			for (int i = 0; i < len; i++){
@@ -41,15 +45,15 @@ void loop () {
 
 void plot(int pos, int val){
 	
-	int x = pos % 16;
-	int y = pos / 16;
+	int x = pos / 16;
+	int y = pos % 16;
 
-	Serial.print("\r\nx: ");
-	Serial.print(x, DEC);
-	Serial.print("; y: ");
-	Serial.print(y, DEC);
-	Serial.print("; color: ");
-	Serial.print(val, DEC);
+	//Serial.print("\r\nx: ");
+	//Serial.print(x, DEC);
+	//Serial.print("; y: ");
+	//Serial.print(y, DEC);
+	//Serial.print("; color: ");
+	//Serial.print(val, DEC);
 	
 	ht1632_plot(x, y, val);
 }
