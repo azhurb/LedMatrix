@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -305,15 +306,17 @@ public class LedMatrixActivity extends Activity implements Runnable {
     	
     }
     
-    public void sendCommand(byte command, byte target, int value) {
-		byte[] buffer = new byte[3];
+    //public void sendCommand(byte command, byte target, int value) {
+    public void sendCommand(byte[] buffer) {
+		/*byte[] buffer = new byte[3];
 		if (value > 255)
 			value = 255;
 
 		buffer[0] = command;
 		buffer[1] = target;
-		buffer[2] = (byte) value;
-		if (mOutputStream != null && buffer[1] != -1) {
+		buffer[2] = (byte) value;*/
+		//if (mOutputStream != null && buffer[1] != -1) {
+	    if (mOutputStream != null) {
 			try {
 				mOutputStream.write(buffer);
 			} catch (IOException e) {
@@ -384,40 +387,57 @@ class VisualizerView extends View {
 
         // Log.d("mClearDouble", "mClearDouble: " + mClearDouble.size() + "; " +
         // mClearDouble.toString());
+        
+        byte[] frame;
+        frame = new byte[128];
+        Arrays.fill(frame, (byte) 0);
 
         for (int i = 0; i < mClearDouble.size() - 1; i++) {
 
-            int pice_h = (int) Math.ceil(mRect.height() / 16);
+            int piece_h = (int) Math.ceil(mRect.height() / 16);
 
-            int num_pices = (int) Math.ceil(mClearDouble.get(i) / pice_h);
+            int num_pieces = (int) Math.ceil(mClearDouble.get(i) / piece_h);
 
             // Log.d("num_pices", "" + num_pices + "; mRect.height() " +
             // mRect.height() + "; pice_h " + pice_h + "; mClearDouble.get(i) "
             // + mClearDouble.get(i));
-
-            for (int j = 1; j <= num_pices; j++) {
-
-                if (j >= 15) {
-                    mForePaint.setColor(Color.rgb(255, 0, 0));
-                } else if (j >= 12) {
-                    mForePaint.setColor(Color.rgb(255, 128, 0));
-                } else {
-                    mForePaint.setColor(Color.rgb(0, 255, 128));
-                }
-
-                canvas.drawRect(
-                        mRect.width() * i / (mClearDouble.size() - 1),
-                        // mRect.height(),
-                        mRect.height() - (int) ((j - 1) * pice_h) - 1,
-                        (mRect.width() * i / (mClearDouble.size() - 1)) + 10,
-                        // (float) (mRect.height() - (mClearDouble.get(i)) *
-                        // mRect.height() / 128),
-                        mRect.height() - (int) (j * pice_h),
-                        mForePaint);
-
-            }
             
-            mActivity.sendCommand((byte) 1, (byte) 1, (int) 1);
+            int color = 0;
+
+            //todo: change direction from 0 to 15
+            for (int j = 16; j >= 1; j--) {
+            //for (int j = 0; j <= 15; j++) {
+                
+                if (j <= num_pieces){
+
+                    if (j >= 15) {
+                        mForePaint.setColor(Color.rgb(255, 0, 0));
+                        color = 2;
+                    } else if (j >= 12) {
+                        mForePaint.setColor(Color.rgb(255, 128, 0));
+                        color = 3;
+                    } else {
+                        mForePaint.setColor(Color.rgb(0, 255, 128));
+                        color = 1;
+                    }
+    
+                    canvas.drawRect(
+                            mRect.width() * i / (mClearDouble.size() - 1),
+                            mRect.height() - (int) ((j - 1) * piece_h) - 1,
+                            (mRect.width() * i / (mClearDouble.size() - 1)) + 10,
+                            mRect.height() - (int) (j * piece_h),
+                            mForePaint);
+                }else{
+                    color = 0;
+                }
+                
+                int z = 16 - j;
+                
+                //todo: filling the frame
+                frame[i + (int) z/4] = (byte) (frame[i + (int) z/4] | (color << (z % 4) * 2));
+            }
         }
+        
+        mActivity.sendCommand(frame);
     }
 }
