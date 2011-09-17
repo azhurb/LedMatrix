@@ -31,12 +31,13 @@ void loop () {
                 
 		if (len > 0) {
 
-			for (int i = 0; i < len; i++){
+			/*for (int i = 0; i < len; i++){
 				plot(i * 4 + 0, (msg[i] >> 0) & 3);
 				plot(i * 4 + 1, (msg[i] >> 2) & 3);
 				plot(i * 4 + 2, (msg[i] >> 4) & 3);
 				plot(i * 4 + 3, (msg[i] >> 6) & 3);
-			}
+			}*/
+                        ht1632_sendframe(msg);
 		}
 	}
 

@@ -338,6 +338,92 @@ void ht1632_plot (int x, int y, int color)
   }
 }
 
+byte get_index(byte idx)
+{
+  byte nChip, x, y, start_index;
+  
+  x = idx / 4;
+  y = (idx % 4) * 4;
+  
+
+  if (x>=32) {
+    nChip = 3 + x/16 + (y>7?2:0);
+  } 
+  else {
+    nChip = 1 + x/16 + (y>7?2:0);
+  }
+  
+  start_index = (nChip-1)*16 + x % 16;
+
+  return start_index;
+}
+
+byte *frame = (byte*) malloc(256);
+
+void ht1632_sendframe(unsigned char * framebuffer)
+{
+  byte offs, cs, i, x, y, tmp=0, from, index;
+  word addr;
+  //frame = (byte*) malloc(256);
+  
+  for (i = 0; i < 128; i=i+2){
+    
+    index = get_index(i);
+    //Serial.print("\r\nindex: ");
+    //Serial.print(index, DEC);
+    //Serial.print("\r\n1 framebuffer[i]: ");
+    //Serial.print(framebuffer[i], BIN);
+    
+    frame[index]        = ((framebuffer[i] >> 0) & 1) << 7;
+    frame[index + 128]  = ((framebuffer[i] >> 1) & 1) << 7;
+    
+    frame[index]       |= ((framebuffer[i] >> 2) & 1) << 6;
+    frame[index + 128] |= ((framebuffer[i] >> 3) & 1) << 6;
+    
+    frame[index]       |= ((framebuffer[i] >> 4) & 1) << 5;
+    frame[index + 128] |= ((framebuffer[i] >> 5) & 1) << 5;
+    
+    frame[index]       |= ((framebuffer[i] >> 6) & 1) << 4;
+    frame[index + 128] |= ((framebuffer[i] >> 7) & 1) << 4;
+    
+    frame[index]       |= ((framebuffer[i+1] >> 0) & 1) << 3;
+    frame[index + 128] |= ((framebuffer[i+1] >> 1) & 1) << 3;
+    
+    frame[index]       |= ((framebuffer[i+1] >> 2) & 1) << 2;
+    frame[index + 128] |= ((framebuffer[i+1] >> 3) & 1) << 2;
+    
+    frame[index]       |= ((framebuffer[i+1] >> 4) & 1) << 1;
+    frame[index + 128] |= ((framebuffer[i+1] >> 5) & 1) << 1;
+    
+    frame[index]       |= ((framebuffer[i+1] >> 6) & 1) << 0;
+    frame[index + 128] |= ((framebuffer[i+1] >> 7) & 1) << 0;
+
+    //Serial.print("\r\n2 framebuffer[i]: ");
+    //Serial.print(framebuffer[i], BIN);
+
+    //Serial.print("\r\nframe[index + 128]: ");
+    //Serial.print(frame[index + 128], BIN);
+
+  }
+  
+  for (cs = 1; cs <= 4; cs++)
+  {
+    ChipSelect(cs);
+    ht1632_writebits(HT1632_ID_WR, 1 << 2);
+    ht1632_writebits(0, 1 << 6);
+
+    
+    for (offs = 0; offs < 16; offs++)
+      ht1632_writebits(frame[offs + (cs-1)*16], 1 << 7);
+    
+    for (offs = 0; offs < 16; offs++)
+      ht1632_writebits(frame[offs + (cs-1)*16 + 128], 1 << 7);
+    
+    
+    ChipSelect(0);
+  }
+}
+
 
 /*
  * ht1632_clear

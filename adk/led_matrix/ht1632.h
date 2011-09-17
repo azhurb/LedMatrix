@@ -53,3 +53,4 @@
 extern void ht1632_setup();
 extern void ht1632_clear();
 extern void ht1632_plot (int, int, int);
+extern void ht1632_sendframe(unsigned char *);
