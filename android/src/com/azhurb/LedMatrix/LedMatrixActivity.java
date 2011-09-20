@@ -35,6 +35,7 @@ import android.media.AudioManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Button;
+import android.widget.Toast;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -55,19 +56,21 @@ import com.android.future.usb.*;
 public class LedMatrixActivity extends Activity implements Runnable {
     private static final String TAG = "LedMatrix";
     
-    private static final String ACTION_USB_PERMISSION = "com.azhurb.LedMatrix.action.USB_PERMISSION";
-
-	private UsbManager mUsbManager;
-	private PendingIntent mPermissionIntent;
-	private boolean mPermissionRequestPending;
+    
 
 	UsbAccessory mAccessory;
 	ParcelFileDescriptor mFileDescriptor;
 	FileInputStream mInputStream;
 	FileOutputStream mOutputStream;
 
+    private static final String ACTION_USB_PERMISSION = "com.azhurb.LedMatrix.action.USB_PERMISSION";
+    
+    /*private UsbManager mUsbManager;
+	private PendingIntent mPermissionIntent;
+	private boolean mPermissionRequestPending;
+*/
     private MediaPlayer mMediaPlayer;
-    private Visualizer mVisualizer;
+    /*private Visualizer mVisualizer;*/
 
     private LinearLayout mLinearLayout;
     private VisualizerView mVisualizerView;
@@ -79,28 +82,29 @@ public class LedMatrixActivity extends Activity implements Runnable {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
+			showToast("Activity action: " + action);
 			if (ACTION_USB_PERMISSION.equals(action)) {
 				synchronized (this) {
 					UsbAccessory accessory = UsbManager.getAccessory(intent);
 					if (intent.getBooleanExtra(
 							UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-						openAccessory(accessory);
+						//openAccessory(accessory);
 					} else {
 						Log.d(TAG, "permission denied for accessory "
 								+ accessory);
 					}
-					mPermissionRequestPending = false;
+					//mPermissionRequestPending = false;
 				}
 			} else if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) {
 				UsbAccessory accessory = UsbManager.getAccessory(intent);
 				if (accessory != null && accessory.equals(mAccessory)) {
-					closeAccessory();
+					//closeAccessory();
 				}
 			}
 		}
 	};
 	
-	private void openAccessory(UsbAccessory accessory) {
+	/*private void openAccessory(UsbAccessory accessory) {
 		mFileDescriptor = mUsbManager.openAccessory(accessory);
 		if (mFileDescriptor != null) {
 			mAccessory = accessory;
@@ -128,7 +132,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
 			mFileDescriptor = null;
 			mAccessory = null;
 		}
-	}
+	}*/
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -161,8 +165,8 @@ public class LedMatrixActivity extends Activity implements Runnable {
         mLinearLayout.addView(mButtonPlay);
         mButtonPlay.setText("Play sample");
         mStatusTextView.setText("Capturing audio out...");
-        setupVisualizerFxAndUI(true);
-        mVisualizer.setEnabled(true);
+        //setupVisualizerFxAndUI(true);
+        //mVisualizer.setEnabled(true);
 
         mButtonPlay.setOnClickListener(new View.OnClickListener() {
 
@@ -170,7 +174,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
             public void onClick(View v) {
 
                 if (mVisualizerView != null) {
-                    mVisualizer.setEnabled(false);
+                    //mVisualizer.setEnabled(false);
                 }
 
                 if (mMediaPlayer.isPlaying()) {
@@ -178,16 +182,16 @@ public class LedMatrixActivity extends Activity implements Runnable {
                     mButtonPlay.setText("Play sample");
                     mStatusTextView.setText("Capturing audio out...");
 
-                    setupVisualizerFxAndUI(true);
+                    //setupVisualizerFxAndUI(true);
                 } else {
                     mMediaPlayer.start();
                     mButtonPlay.setText("Stop playing");
                     mStatusTextView.setText("Playing audio...");
 
-                    setupVisualizerFxAndUI(false);
+                    //setupVisualizerFxAndUI(false);
                 }
 
-                mVisualizer.setEnabled(true);
+                //mVisualizer.setEnabled(true);
             }
         });
 
@@ -197,22 +201,34 @@ public class LedMatrixActivity extends Activity implements Runnable {
                 // (int)(VISUALIZER_HEIGHT_DIP *
                 // getResources().getDisplayMetrics().density)));
                 128));
-        mLinearLayout.addView(mVisualizerView);
+        mLinearLayout.addView(mVisualizerView);/**/
         
-        mUsbManager = UsbManager.getInstance(this);
+        /*mUsbManager = UsbManager.getInstance(this);
 		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
 				ACTION_USB_PERMISSION), 0);
 		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
 		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-		registerReceiver(mUsbReceiver, filter);
+		registerReceiver(mUsbReceiver, filter);*/
 
-		if (getLastNonConfigurationInstance() != null) {
+		/*if (getLastNonConfigurationInstance() != null) {
 			mAccessory = (UsbAccessory) getLastNonConfigurationInstance();
 			openAccessory(mAccessory);
-		}
+		}*/
+        Log.d("Service", "before");
+        startService(new Intent(this, LedMatrixService.class));
+        Log.d("Service", "after");
+    }
+    
+    public void showToast(String msg){
+    	Context context = getApplicationContext();
+    	CharSequence text = msg;
+    	int duration = Toast.LENGTH_SHORT;
+
+    	Toast toast = Toast.makeText(context, text, duration);
+    	toast.show();
     }
 
-    private void setupVisualizerFxAndUI(boolean captureAudioOut) {
+    /*private void setupVisualizerFxAndUI(boolean captureAudioOut) {
 
         if (captureAudioOut) {
             mVisualizer = new Visualizer(0);
@@ -238,7 +254,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
             }
 
         }, Visualizer.getMaxCaptureRate(), false, true);
-    }
+    }*/
     
     static final String HEXES = "0123456789ABCDEF";
 
@@ -254,16 +270,16 @@ public class LedMatrixActivity extends Activity implements Runnable {
         return hex.toString();
     }
     
-    @Override
+   /* @Override
 	public Object onRetainNonConfigurationInstance() {
 		if (mAccessory != null) {
 			return mAccessory;
 		} else {
 			return super.onRetainNonConfigurationInstance();
 		}
-	}
+	}*/
     
-    @Override
+    /*@Override
 	public void onResume() {
 		super.onResume();
 
@@ -289,16 +305,16 @@ public class LedMatrixActivity extends Activity implements Runnable {
 		} else {
 			Log.d(TAG, "mAccessory is null");
 		}
-	}
+	}*/
 
     @Override
     protected void onPause() {
         super.onPause();
         
-        closeAccessory();
+        //closeAccessory();
 
         if (isFinishing() && mMediaPlayer != null) {
-            mVisualizer.release();
+            //mVisualizer.release();
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
@@ -308,16 +324,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
     	
     }
     
-    //public void sendCommand(byte command, byte target, int value) {
-    public void sendCommand(byte[] buffer) {
-		/*byte[] buffer = new byte[3];
-		if (value > 255)
-			value = 255;
-
-		buffer[0] = command;
-		buffer[1] = target;
-		buffer[2] = (byte) value;*/
-		//if (mOutputStream != null && buffer[1] != -1) {
+    /*public void sendCommand(byte[] buffer) {
 	    if (mOutputStream != null) {
 			try {
 				mOutputStream.write(buffer);
@@ -325,19 +332,21 @@ public class LedMatrixActivity extends Activity implements Runnable {
 				Log.e(TAG, "write failed", e);
 			}
 		}
-	}
+	}*/
     
-    @Override
+    /*@Override
 	public void onDestroy() {
 		unregisterReceiver(mUsbReceiver);
 		super.onDestroy();
-	}
+	}*/
 }
 
 class VisualizerView extends View {
     private byte[] mBytes;
     // private float[] mPoints;
     private Rect mRect = new Rect();
+    
+    private static VisualizerView instance;
     
     protected LedMatrixActivity mActivity;
 
@@ -346,7 +355,12 @@ class VisualizerView extends View {
     public VisualizerView(LedMatrixActivity activity) {
         super(activity);
         mActivity = activity;
+        instance = this;
         init();
+    }
+    
+    public static VisualizerView getInstance(){
+    	return instance;
     }
 
     private void init() {
@@ -434,17 +448,17 @@ class VisualizerView extends View {
                     color = 0;
                 }
                 
-                int z = 16 - j;
+                //int z = 16 - j;
                 
                 //todo: filling the frame
-                frame[i * 4 + (int) z/4] = (byte) (frame[i * 4 + (int) z/4] | (color << (z % 4) * 2));
+                //frame[i * 4 + (int) z/4] = (byte) (frame[i * 4 + (int) z/4] | (color << (z % 4) * 2));
             }
         }
         
-        Log.d("frame", "frame: " + LedMatrixActivity.getHex(frame));
+        //Log.d("frame", "frame: " + LedMatrixActivity.getHex(frame));
         
         //if (mActivity != null) {
-        	mActivity.sendCommand(frame);
+        	//mActivity.sendCommand(frame);
         //}
     }
 }

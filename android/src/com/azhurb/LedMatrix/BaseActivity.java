@@ -13,10 +13,10 @@ public class BaseActivity extends LedMatrixActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		if (mAccessory != null) {
+		//if (mAccessory != null) {
 			//showControls();
-		} else {
+		//} else {
 			//hideControls();
-		}
+		//}
 	}
 }
