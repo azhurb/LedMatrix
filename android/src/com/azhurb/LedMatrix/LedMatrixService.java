@@ -47,6 +47,37 @@ public class LedMatrixService extends Service implements Runnable {
         return null;
     }
     
+    public int onStartCommand(Intent intent, int flags, int startId) {
+    	
+    	showToast("onStartCommand");
+       
+        UsbAccessory[] accessories = mUsbManager.getAccessoryList();
+		UsbAccessory accessory = (accessories == null ? null : accessories[0]);
+		if (accessory != null) {
+			if (mUsbManager.hasPermission(accessory)) {
+				openAccessory(accessory);
+			} else {
+				synchronized (mUsbReceiver) {
+					if (!mPermissionRequestPending) {
+						mUsbManager.requestPermission(accessory,
+								mPermissionIntent);
+						mPermissionRequestPending = true;
+					}
+				}
+			}
+		} else {
+			Log.d(TAG, "mAccessory is null");
+		}
+        
+        return 1;
+    }
+    
+    @Override
+    public void onLowMemory() {
+    	super.onLowMemory();
+    	closeAccessory();
+    }
+    
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -75,7 +106,7 @@ public class LedMatrixService extends Service implements Runnable {
     
     private void openAccessory(UsbAccessory accessory) {
     	Log.d("openAccessory", "openAccessory");
-    	showToast("Open accessory");
+    	showToast("Open accessory: "+accessory);
         mFileDescriptor = mUsbManager.openAccessory(accessory);
         if (mFileDescriptor != null) {
             mAccessory = accessory;
@@ -85,9 +116,11 @@ public class LedMatrixService extends Service implements Runnable {
             Thread thread = new Thread(null, this, "LedMatrix");
             thread.start();
             Log.d(TAG, "accessory opened");
+            showToast("accessory opened");
             //enableControls(true);
         } else {
             Log.d(TAG, "accessory open fail");
+            showToast("accessory open fail");
         }
     }
     
@@ -136,11 +169,11 @@ public class LedMatrixService extends Service implements Runnable {
         mUsbManager = UsbManager.getInstance(this);
 		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
 				ACTION_USB_PERMISSION), 0);
-		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+		
+	    IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
 		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
 		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
 		registerReceiver(mUsbReceiver, filter);
-
     }
 
 	public void showToast(String msg){
@@ -228,6 +261,7 @@ public class LedMatrixService extends Service implements Runnable {
     @Override
     public void onDestroy() {
         unregisterReceiver(mUsbReceiver);
+        closeAccessory();
         super.onDestroy();
     }
 

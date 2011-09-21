@@ -19,10 +19,13 @@
         <activity android:name=".LedMatrixActivity" android:label="@string/app_name"
             android:screenOrientation="portrait">
         </activity>
-        <service android:name=".LedMatrixService">
+        <service android:name=".LedMatrixService" android:label="LedMatrix"
+            android:taskAffinity="" android:launchMode="singleInstance">
             <!-- <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
-            </intent-filter> -->
+            </intent-filter>
+            <meta-data android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+                android:resource="@xml/accessory_filter" /> -->
         </service>
         <activity android:name=".LedMatrixPhone" android:label="@string/app_name"
             android:screenOrientation="portrait">
@@ -36,5 +39,14 @@
             <meta-data android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
         </activity>
+        <!-- <activity android:name="ServiceLaunchActivity" android:label="LedMatrix"
+            android:taskAffinity="" android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
+            </intent-filter>
+
+            <meta-data android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+                android:resource="@xml/accessory_filter" />
+        </activity>-->
     </application>
 </manifest>

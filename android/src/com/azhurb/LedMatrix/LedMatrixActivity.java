@@ -78,7 +78,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
     private Button mButtonPlay;
     
     
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+    /*private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
@@ -102,7 +102,7 @@ public class LedMatrixActivity extends Activity implements Runnable {
 				}
 			}
 		}
-	};
+	};*/
 	
 	/*private void openAccessory(UsbAccessory accessory) {
 		mFileDescriptor = mUsbManager.openAccessory(accessory);
@@ -208,11 +208,13 @@ public class LedMatrixActivity extends Activity implements Runnable {
 				ACTION_USB_PERMISSION), 0);
 		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
 		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-		registerReceiver(mUsbReceiver, filter);*/
-
+		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
+		registerReceiver(mUsbReceiver, filter);
+*/
 		/*if (getLastNonConfigurationInstance() != null) {
 			mAccessory = (UsbAccessory) getLastNonConfigurationInstance();
-			openAccessory(mAccessory);
+			//openAccessory(mAccessory);
+			showToast(msg)
 		}*/
         Log.d("Service", "before");
         startService(new Intent(this, LedMatrixService.class));
