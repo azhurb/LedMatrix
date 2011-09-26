@@ -6,7 +6,7 @@ AndroidAccessory acc("Google, Inc.",
 		     "LedMatrix",
 		     "LedMatrix Arduino Board",
 		     "1.0",
-		     "http://adk-open-call-2011.blogspot.com/",
+		     "https://github.com/azhurb/LedMatrix/blob/master/android/bin/LedMatrix.apk",
 		     "0000000012345678");
 
 void setup () {
