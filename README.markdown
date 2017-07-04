@@ -1,8 +1,20 @@
-### ADK Led matrix project for GDD 2011.
+# ADK Led matrix project for Google ADK Open Call 2011.
+Audio visualizations on 32x16 LED matrix from the Android phone
 
-Produces audio visualizations on 32x16 LED matrix.
+## Installation
+`adk/led_matrix/` - ADK/Arduino sketch
 
-Demo video: http://www.youtube.com/watch?v=5fyPuvWf8L8
+`android/` - Source code of the Android application
 
+`android/bin/LedMatrix.apk` - Builded Android application
+
+## Demo
+Video: http://www.youtube.com/watch?v=5fyPuvWf8L8
+
+## More
 Blog: http://adk-open-call-2011.blogspot.com/
 
+Accessory Development Kit: https://developer.android.com/adk/index.html
+
+## License
+Licensed under the MIT license.
