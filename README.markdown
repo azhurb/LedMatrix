@@ -9,7 +9,7 @@ Audio visualization on 32x16 LED matrix from the Android phone
 `android/bin/LedMatrix.apk` - Android application
 
 ## Demo
-[![ADK LedMatrix demo](misc/youtube.png)](https://www.youtube.com/watch?v=5fyPuvWf8L8)
+[![Demo video](misc/youtube.png)](https://www.youtube.com/watch?v=5fyPuvWf8L8)
 
 
 ## More
