@@ -30,13 +30,6 @@ void loop () {
                 Serial.print(len, DEC);
                 
 		if (len > 0) {
-
-			/*for (int i = 0; i < len; i++){
-				plot(i * 4 + 0, (msg[i] >> 0) & 3);
-				plot(i * 4 + 1, (msg[i] >> 2) & 3);
-				plot(i * 4 + 2, (msg[i] >> 4) & 3);
-				plot(i * 4 + 3, (msg[i] >> 6) & 3);
-			}*/
                         ht1632_sendframe(msg);
 		}
 	}
@@ -48,13 +41,6 @@ void plot(int pos, int val){
 	
 	int x = pos / 16;
 	int y = pos % 16;
-
-	//Serial.print("\r\nx: ");
-	//Serial.print(x, DEC);
-	//Serial.print("; y: ");
-	//Serial.print(y, DEC);
-	//Serial.print("; color: ");
-	//Serial.print(val, DEC);
 	
 	ht1632_plot(x, y, val);
 }
