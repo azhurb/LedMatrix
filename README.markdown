@@ -14,7 +14,7 @@ Audio visualization on 32x16 LED matrix from the Android phone
 ## More
 Blog: http://adk-open-call-2011.blogspot.com/
 
-Accessory Development Kit: https://source.android.com/devices/accessories/
+Accessories for Android documentation : https://source.android.com/devices/accessories/
 
 ## License
 Licensed under the MIT license.
