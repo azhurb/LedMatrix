@@ -11,11 +11,10 @@ Audio visualization on 32x16 LED matrix from the Android phone
 ## Demo
 [![Demo video](misc/youtube.png)](https://www.youtube.com/watch?v=5fyPuvWf8L8)
 
-
 ## More
 Blog: http://adk-open-call-2011.blogspot.com/
 
-Accessory Development Kit: https://developer.android.com/adk/index.html
+Accessory Development Kit: https://source.android.com/devices/accessories/
 
 ## License
 Licensed under the MIT license.
