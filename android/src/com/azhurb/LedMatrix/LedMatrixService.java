@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class LedMatrixService extends Service implements Runnable {
-    
-    private static final String TAG = "LedMatrixService";    
+
+    private static final String TAG = "LedMatrixService";
 
     private static final String ACTION_USB_PERMISSION = "com.azhurb.LedMatrix.action.USB_PERMISSION";
-    
+
     private UsbManager mUsbManager;
     private PendingIntent mPermissionIntent;
     private boolean mPermissionRequestPending;
@@ -36,53 +36,53 @@ public class LedMatrixService extends Service implements Runnable {
     ParcelFileDescriptor mFileDescriptor;
     FileInputStream mInputStream;
     FileOutputStream mOutputStream;
-    
+
     private Visualizer mVisualizer;
-    
+
     private VisualizerView mVisualizerView;
-    
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     public int onStartCommand(Intent intent, int flags, int startId) {
-    	
-    	showToast("onStartCommand");
-       
+
+        showToast("onStartCommand");
+
         UsbAccessory[] accessories = mUsbManager.getAccessoryList();
-		UsbAccessory accessory = (accessories == null ? null : accessories[0]);
-		if (accessory != null) {
-			if (mUsbManager.hasPermission(accessory)) {
-				openAccessory(accessory);
-			} else {
-				synchronized (mUsbReceiver) {
-					if (!mPermissionRequestPending) {
-						mUsbManager.requestPermission(accessory,
-								mPermissionIntent);
-						mPermissionRequestPending = true;
-					}
-				}
-			}
-		} else {
-			Log.d(TAG, "mAccessory is null");
-		}
-        
+        UsbAccessory accessory = (accessories == null ? null : accessories[0]);
+        if (accessory != null) {
+            if (mUsbManager.hasPermission(accessory)) {
+                openAccessory(accessory);
+            } else {
+                synchronized (mUsbReceiver) {
+                    if (!mPermissionRequestPending) {
+                        mUsbManager.requestPermission(accessory,
+                                mPermissionIntent);
+                        mPermissionRequestPending = true;
+                    }
+                }
+            }
+        } else {
+            Log.d(TAG, "mAccessory is null");
+        }
+
         return 1;
     }
-    
+
     @Override
     public void onLowMemory() {
-    	super.onLowMemory();
-    	closeAccessory();
+        super.onLowMemory();
+        closeAccessory();
     }
-    
+
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            showToast("Receive broadcast msg: "+action);
+            showToast("Receive broadcast msg: " + action);
             if (ACTION_USB_PERMISSION.equals(action)) {
                 synchronized (this) {
                     UsbAccessory accessory = UsbManager.getAccessory(intent);
@@ -103,10 +103,10 @@ public class LedMatrixService extends Service implements Runnable {
             }
         }
     };
-    
+
     private void openAccessory(UsbAccessory accessory) {
-    	Log.d("openAccessory", "openAccessory");
-    	showToast("Open accessory: "+accessory);
+        Log.d("openAccessory", "openAccessory");
+        showToast("Open accessory: " + accessory);
         mFileDescriptor = mUsbManager.openAccessory(accessory);
         if (mFileDescriptor != null) {
             mAccessory = accessory;
@@ -117,16 +117,14 @@ public class LedMatrixService extends Service implements Runnable {
             thread.start();
             Log.d(TAG, "accessory opened");
             showToast("accessory opened");
-            //enableControls(true);
         } else {
             Log.d(TAG, "accessory open fail");
             showToast("accessory open fail");
         }
     }
-    
+
     private void closeAccessory() {
-        //enableControls(false);
-    	showToast("Close accessory");
+        showToast("Close accessory");
         try {
             if (mFileDescriptor != null) {
                 mFileDescriptor.close();
@@ -137,18 +135,18 @@ public class LedMatrixService extends Service implements Runnable {
             mAccessory = null;
         }
     }
-    
+
     @Override
     public void onCreate() {
-    	
-    	Log.d(TAG, "onCreate");
-    	
-    	showToast("Starting service");
-    	
-    	mVisualizerView = VisualizerView.getInstance();
-    	
+
+        Log.d(TAG, "onCreate");
+
+        showToast("Starting service");
+
+        mVisualizerView = VisualizerView.getInstance();
+
         mVisualizer = new Visualizer(0);
-        
+
         mVisualizer.setCaptureSize(512);
 
         mVisualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
@@ -157,59 +155,58 @@ public class LedMatrixService extends Service implements Runnable {
             }
 
             public void onFftDataCapture(Visualizer visualizer, byte[] bytes,
-                    int samplingRate) {
-                //Log.d(TAG, "Captured " + bytes.length);
+                                         int samplingRate) {
                 updateMatrix(bytes);
             }
 
         }, Visualizer.getMaxCaptureRate(), false, true);
-        
+
         mVisualizer.setEnabled(true);
-        
+
         mUsbManager = UsbManager.getInstance(this);
-		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
-				ACTION_USB_PERMISSION), 0);
-		
-	    IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-		filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
-		registerReceiver(mUsbReceiver, filter);
+        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
+                ACTION_USB_PERMISSION), 0);
+
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
+        filter.addAction(UsbManager.ACTION_USB_ACCESSORY_ATTACHED);
+        registerReceiver(mUsbReceiver, filter);
     }
 
-	public void showToast(String msg){
-    	Context context = getApplicationContext();
-    	CharSequence text = msg;
-    	int duration = Toast.LENGTH_SHORT;
+    public void showToast(String msg) {
+        Context context = getApplicationContext();
+        CharSequence text = msg;
+        int duration = Toast.LENGTH_SHORT;
 
-    	Toast toast = Toast.makeText(context, text, duration);
-    	toast.show();
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
     }
 
     @Override
     public void run() {
         // TODO Auto-generated method stub
-        
+
     }
+
     private byte[] mBytes;
-    /*private VisualizerView mVisualizerView;*/
-    
-    private void updateMatrix(byte[] bytes){
+
+    private void updateMatrix(byte[] bytes) {
         mBytes = bytes;
-        
+
         mVisualizerView = VisualizerView.getInstance();
-        
-        if (mVisualizerView.isShown()){
-        	mVisualizerView.updateVisualizer(bytes);
+
+        if (mVisualizerView.isShown()) {
+            mVisualizerView.updateVisualizer(bytes);
         }
-        
+
         ArrayList<Double> mClearDouble = new ArrayList<Double>();
-        
+
         for (int i = 2; i <= 66; i = i + 2) {
 
             mClearDouble.add((double) 10
                     * Math.log((mBytes[i] * mBytes[i]) + (mBytes[i + 1] * mBytes[i + 1])));
         }
-        
+
         byte[] frame;
         frame = new byte[128];
         Arrays.fill(frame, (byte) 0);
@@ -222,8 +219,8 @@ public class LedMatrixService extends Service implements Runnable {
             int color = 0;
 
             for (int j = 16; j >= 1; j--) {
-                
-                if (j <= num_pieces){
+
+                if (j <= num_pieces) {
 
                     if (j >= 15) {
                         color = 2;
@@ -232,22 +229,19 @@ public class LedMatrixService extends Service implements Runnable {
                     } else {
                         color = 1;
                     }
-                }else{
+                } else {
                     color = 0;
                 }
-                
+
                 int z = 16 - j;
-                
-                //todo: filling the frame
-                frame[i * 4 + (int) z/4] = (byte) (frame[i * 4 + (int) z/4] | (color << (z % 4) * 2));
+
+                frame[i * 4 + (int) z / 4] = (byte) (frame[i * 4 + (int) z / 4] | (color << (z % 4) * 2));
             }
         }
-        
-        //Log.d("frame", "frame: " + LedMatrixActivity.getHex(frame));
-        
+
         sendCommand(frame);
     }
-    
+
     public void sendCommand(byte[] buffer) {
         if (mOutputStream != null) {
             try {
@@ -257,7 +251,7 @@ public class LedMatrixService extends Service implements Runnable {
             }
         }
     }
-    
+
     @Override
     public void onDestroy() {
         unregisterReceiver(mUsbReceiver);

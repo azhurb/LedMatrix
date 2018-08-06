@@ -4,19 +4,12 @@ import android.os.Bundle;
 
 public class BaseActivity extends LedMatrixActivity {
 
-	//private InputController mInputController;
+    public BaseActivity() {
+        super();
+    }
 
-	public BaseActivity() {
-		super();
-	}
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		//if (mAccessory != null) {
-			//showControls();
-		//} else {
-			//hideControls();
-		//}
-	}
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 }
