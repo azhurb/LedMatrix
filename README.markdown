@@ -1,4 +1,5 @@
-# ADK Led matrix project for Google ADK Open Call 2011
+# ADK Led matrix
+*Project for Google ADK Open Call 2011*  
 Audio visualization on 32x16 LED matrix from the Android phone
 
 ## Installation
